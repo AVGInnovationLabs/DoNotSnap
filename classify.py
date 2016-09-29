@@ -33,8 +33,8 @@ def classify(model, features, coords, weight_map, mask_scale):
     return np.array(rects)
 
 
-def main():
-    image = Image.open(sys.argv[1])
+def main(image_file):
+    image = Image.open(image_file)
     if image is None:
         print 'Could not load image "%s"' % sys.argv[1]
         return
@@ -78,4 +78,5 @@ def main():
     plt.show()
 
 if __name__ == '__main__':
-    main()
+    image_file = sys.argv[1] if len(sys.argv) >= 2 else 'sample.jpg'
+    main(image_file)
