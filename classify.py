@@ -5,11 +5,12 @@ import numpy as np
 
 from AffineInvariantFeatures import AffineInvariant
 from RegionOfInterest import extractRoi
-from TemplateMatcher import TemplateMatch, Templates #imported to allow deserialization
+from TemplateMatcher import TemplateMatch, Templates  # imported to allow deserialization
 from util import non_max_suppression_fast
 
 from PIL import Image
 from matplotlib import pyplot as plt
+
 
 def classify(model, features, coords, weight_map, mask_scale):
     rects = []
@@ -31,13 +32,14 @@ def classify(model, features, coords, weight_map, mask_scale):
 
     return np.array(rects)
 
+
 def main():
     image = Image.open(sys.argv[1])
     if image is None:
         print 'Could not load image "%s"' % sys.argv[1]
         return
 
-    image = np.array(image.convert('RGB'), dtype = np.uint8)
+    image = np.array(image.convert('RGB'), dtype=np.uint8)
     image = image[:, :, ::-1].copy()
 
     winSize = (200, 200)

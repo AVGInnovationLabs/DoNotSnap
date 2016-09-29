@@ -3,6 +3,7 @@ import math
 import numpy as np
 from util import pyramid, sliding_window
 
+
 def boundingRects(scale, contours):
     for contour in contours:
         epsilon = 0.1 * cv2.arcLength(contour, True)
@@ -11,6 +12,7 @@ def boundingRects(scale, contours):
 
         yield [x * scale, y * scale, w * scale, h * scale]
 
+
 def extractEdges(hue, intensity):
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
 
@@ -18,19 +20,21 @@ def extractEdges(hue, intensity):
     hue_edges = cv2.Canny(cv2.GaussianBlur(hue, (5, 5), 0), 0, 255)
     combined_edges = cv2.bitwise_or(hue_edges, edges)
     _, mask = cv2.threshold(combined_edges, 40, 255, cv2.THRESH_BINARY)
-    return cv2.erode(cv2.GaussianBlur(mask, (3, 3), 0), kernel, iterations = 1)
+    return cv2.erode(cv2.GaussianBlur(mask, (3, 3), 0), kernel, iterations=1)
+
 
 def roiFromEdges(edges):
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7, 7))
     small_kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
     # close gaps in edges to create continous regions
-    roi = cv2.dilate(edges, small_kernel, iterations = 14)
-    return cv2.erode(roi, kernel, iterations = 4)
+    roi = cv2.dilate(edges, small_kernel, iterations=14)
+    return cv2.erode(roi, kernel, iterations=4)
+
 
 def findEllipses(edges):
     contours, _ = cv2.findContours(edges.copy(), cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
-    ellipseMask = np.zeros(edges.shape, dtype = np.uint8)
-    contourMask = np.zeros(edges.shape, dtype = np.uint8)
+    ellipseMask = np.zeros(edges.shape, dtype=np.uint8)
+    contourMask = np.zeros(edges.shape, dtype=np.uint8)
 
     pi_4 = np.pi * 4
 
@@ -39,7 +43,7 @@ def findEllipses(edges):
             continue
 
         area = cv2.contourArea(contour)
-        if area <= 100: # skip ellipses smaller then 10x10
+        if area <= 100:  # skip ellipses smaller then 10x10
             continue
 
         arclen = cv2.arcLength(contour, True)
@@ -53,19 +57,20 @@ def findEllipses(edges):
             continue
 
         # if contour has enough similarity to an ellipse
-        similarity =  cv2.matchShapes(poly.reshape((poly.shape[0], 1, poly.shape[1])), contour, cv2.cv.CV_CONTOURS_MATCH_I2, 0)
+        similarity = cv2.matchShapes(poly.reshape((poly.shape[0], 1, poly.shape[1])), contour, cv2.cv.CV_CONTOURS_MATCH_I2, 0)
         if similarity <= 0.2:
             cv2.fillPoly(contourMask, [poly], 255)
 
     return ellipseMask, contourMask
 
+
 def findCircles(hue, intensity):
-    houghCirclesMask = np.zeros(hue.shape, dtype = np.uint8)
+    houghCirclesMask = np.zeros(hue.shape, dtype=np.uint8)
 
     blurred_hue = cv2.GaussianBlur(hue, (9, 9), 2)
     blurred_intensity = cv2.GaussianBlur(intensity, (9, 9), 2)
-    hue_circles = cv2.HoughCircles(blurred_hue, cv2.cv.CV_HOUGH_GRADIENT, 0.5, hue.shape[0] / 8, param1 = 10, param2 = 25, maxRadius = 100)
-    intensity_circles = cv2.HoughCircles(blurred_intensity, cv2.cv.CV_HOUGH_GRADIENT, 0.5, hue.shape[0] / 8, param1 = 185, param2 = 20, maxRadius = 100)
+    hue_circles = cv2.HoughCircles(blurred_hue, cv2.cv.CV_HOUGH_GRADIENT, 0.5, hue.shape[0] / 8, param1=10, param2=25, maxRadius=100)
+    intensity_circles = cv2.HoughCircles(blurred_intensity, cv2.cv.CV_HOUGH_GRADIENT, 0.5, hue.shape[0] / 8, param1=185, param2=20, maxRadius=100)
 
     circles = np.vstack((hue_circles[0] if hue_circles is not None else np.empty((0, 3)),
                          intensity_circles[0] if intensity_circles is not None else np.empty((0, 3))))
@@ -75,12 +80,14 @@ def findCircles(hue, intensity):
 
     return houghCirclesMask
 
-def findRANSACCircles(edges, circleSearches = 5):
+
+def findRANSACCircles(edges, circleSearches=5):
     edges = edges.copy()
-    mask = np.zeros(edges.shape, dtype = np.uint8)
+    mask = np.zeros(edges.shape, dtype=np.uint8)
 
     minRadius = 10
     maxRadius = 100
+
     def verifyCircle(dt, center, radius):
         minInlierDist = 2.0
         maxInlierDistMax = 100.0
@@ -140,37 +147,35 @@ def findRANSACCircles(edges, circleSearches = 5):
         # create distance transform to efficiently evaluate distance to nearest edge
         dt = cv2.distanceTransform(255 - edges, cv2.cv.CV_DIST_L1, 3)
 
-        nIterations = 0
-
         bestCircleCenter = None
         bestCircleRadius = 0
         bestCirclePercentage = 0
 
-        minCirclePercentage = 0.6 #at least 60% of a circle must be present
+        minCirclePercentage = 0.6  # at least 60% of a circle must be present
 
-        maxNrOfIterations = len(edgePositions) #TODO: adjust this parameter or include some real ransac criteria with inlier/outlier percentages to decide when to stop
+        maxNrOfIterations = len(edgePositions)  # TODO: adjust this parameter or include some real ransac criteria with inlier/outlier percentages to decide when to stop
 
         for its in xrange(maxNrOfIterations):
-            #RANSAC: randomly choose 3 point and create a circle:
+            # RANSAC: randomly choose 3 point and create a circle:
 
-            #TODO: choose randomly but more intelligent,
-            #so that it is more likely to choose three points of a circle.
-            #For example if there are many small circles, it is unlikely to randomly choose 3 points of the same circle.
+            # TODO: choose randomly but more intelligent,
+            # so that it is more likely to choose three points of a circle.
+            # For example if there are many small circles, it is unlikely to randomly choose 3 points of the same circle.
             idx1 = np.random.randint(len(edgePositions))
             idx2 = np.random.randint(len(edgePositions))
             idx3 = np.random.randint(len(edgePositions))
 
-            #we need 3 different samples:
+            # we need 3 different samples:
             if idx1 == idx2 or idx1 == idx3 or idx3 == idx2:
                 continue
 
-            #create circle from 3 points:
+            # create circle from 3 points:
             center, radius = getCircle(edgePositions[idx1], edgePositions[idx2], edgePositions[idx3])
             if not center or radius > maxRadius:
                 continue
 
-            #inlier set unused at the moment but could be used to approximate a (more robust) circle from alle inlier
-            #verify or falsify the circle by inlier counting:
+            # inlier set unused at the moment but could be used to approximate a (more robust) circle from alle inlier
+            # verify or falsify the circle by inlier counting:
             cPerc, inlierSet = verifyCircle(dt, center, radius)
 
             if cPerc >= bestCirclePercentage and radius >= minRadius:
@@ -178,12 +183,13 @@ def findRANSACCircles(edges, circleSearches = 5):
                 bestCircleRadius = radius
                 bestCircleCenter = center
 
-        #draw if good circle was found
+        # draw if good circle was found
         if bestCirclePercentage >= minCirclePercentage and bestCircleRadius >= minRadius:
             cv2.circle(mask, (int(round(bestCircleCenter[0])), int(round(bestCircleCenter[1]))), int(round(bestCircleRadius)), 255, -1)
-            #mask found circle
+            # mask found circle
             cv2.circle(edges, (int(round(bestCircleCenter[0])), int(round(bestCircleCenter[1]))), int(round(bestCircleRadius)), (0, 0, 0), 3)
     return mask
+
 
 def weightMap(hue, intensity, edges, roi):
     ellipseMask, contourMask = findEllipses(edges)
@@ -192,7 +198,7 @@ def weightMap(hue, intensity, edges, roi):
 
     # create a map by combining different masks
     # circle/ellipse detection masks have a higher weight then roi mask and ransac mask
-    combinedMask = np.zeros(edges.shape, dtype = np.float32)
+    combinedMask = np.zeros(edges.shape, dtype=np.float32)
     combinedMask += ellipseMask
     combinedMask += contourMask
     combinedMask += circlesMask
@@ -208,15 +214,16 @@ def weightMap(hue, intensity, edges, roi):
     combinedMask[nonZeroMask] += 0.4
     return combinedMask
 
+
 def roiMask(image, boundaries):
     scale = max([1.0, np.average(np.array(image.shape)[0:2] / 400.0)])
     shape = (int(round(image.shape[1] / scale)), int(round(image.shape[0] / scale)))
 
-    small_color = cv2.resize(image, shape, interpolation = cv2.INTER_LINEAR)
+    small_color = cv2.resize(image, shape, interpolation=cv2.INTER_LINEAR)
 
     # reduce details and remove noise for better edge detection
     small_color = cv2.bilateralFilter(small_color, 8, 64, 64)
-    small_color = cv2.pyrMeanShiftFiltering(small_color, 8, 64, maxLevel = 1)
+    small_color = cv2.pyrMeanShiftFiltering(small_color, 8, 64, maxLevel=1)
     small = cv2.cvtColor(small_color, cv2.COLOR_BGR2HSV)
 
     hue = small[::, ::, 0]
@@ -227,29 +234,30 @@ def roiMask(image, boundaries):
     weight_map = weightMap(hue, intensity, edges, roi)
 
     _, final_mask = cv2.threshold(roi, 5, 255, cv2.THRESH_BINARY)
-    small = cv2.bitwise_and(small, small, mask = final_mask)
+    small = cv2.bitwise_and(small, small, mask=final_mask)
 
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (4, 4))
 
     for (lower, upper) in boundaries:
-        lower = np.array([lower, 80, 50], dtype = "uint8")
-        upper = np.array([upper, 255, 255], dtype = "uint8")
+        lower = np.array([lower, 80, 50], dtype="uint8")
+        upper = np.array([upper, 255, 255], dtype="uint8")
 
         # find the colors within the specified boundaries and apply
         # the mask
         mask = cv2.inRange(small, lower, upper)
-        mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel, iterations = 3)
-        mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel, iterations = 1)
+        mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel, iterations=3)
+        mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel, iterations=1)
         final_mask = cv2.bitwise_and(final_mask, mask)
 
     # blur the mask for better contour extraction
     final_mask = cv2.GaussianBlur(final_mask, (5, 5), 0)
     return (final_mask, weight_map, scale)
 
+
 def extractRoi(image, winSize, stepSize):
-    #hue boundaries
+    # hue boundaries
     colors = [
-        (15, 30) # orange-yellow
+        (15, 30)  # orange-yellow
     ]
 
     mask, weight_map, mask_scale = roiMask(image, colors)
@@ -272,4 +280,3 @@ def extractRoi(image, winSize, stepSize):
                 y = max(0, int(center[1] - winSize[1] / 2))
                 window = resized[y:y + winSize[1], x:x + winSize[0]]
                 yield ((x, y, winSize[0], winSize[1]), scale, window)
-
