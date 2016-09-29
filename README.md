@@ -1,8 +1,9 @@
 # DoNotSnap
-![Do Not Snap logo](https://raw.githubusercontent.com/AVGInnovationLabs/DoNotSnap/master/dns_logo.png =250x)
+<img src="https://raw.githubusercontent.com/AVGInnovationLabs/DoNotSnap/master/dns_logo.png" height="400">
 
 An experiment in detecting DoNotSnap badges in photos.
-![Do Not Snap badge](https://raw.githubusercontent.com/AVGInnovationLabs/DoNotSnap/master/dns_badge.png =100x)
+
+<div style="text-align:center"><p align="center"><img src="https://raw.githubusercontent.com/AVGInnovationLabs/DoNotSnap/master/dns_badge.png" height="200"></p></div>
 
 This program allows you to detect and itentify DoNotSnap badges via a sliding-window decision tree classifier (custom heuristics are used to reduce search space).
 Classifier is trained by matching samples against image templates using Affine-transform invariant SURF features.
