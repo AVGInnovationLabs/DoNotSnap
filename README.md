@@ -26,3 +26,60 @@ The output is a `<output-file>.pkl` with serialized classifier.
   * sklearn
   * matplotlib
   * PIL
+
+## DoNotSnap sticker templates
+In the repository you can find templates for printing DoNoSnap stickers.
+
+`avery_8254.pdf` contains design compatible with US format paper. Compatible Avery templates:
+  * 15664
+  * 18664
+  * 45464
+  * 48264
+  * 48464
+  * 48864
+  * 5164
+  * 5264
+  * 55164
+  * 5524
+  * 55264
+  * 55364
+  * 55464
+  * 5664
+  * 58164
+  * 58264
+  * 8164
+  * 8254
+  * 8464
+  * 8564
+  * 15264
+  * 95940
+  * 95905
+
+`A-0004-01_P.pdf` contains design compatible with A4-format paper. Compatible Avery templates:
+  * J8165
+  * J8165-10
+  * J8165-25
+  * J8165-40
+  * J8165-100
+  * J8165-250
+  * J8165-500
+  * J8365
+  * J8565
+  * J8565-25
+  * L7165
+  * L7165-40
+  * L7165-100
+  * L7165-250
+  * L7165-500
+  * LR7165-100
+  * L7165X
+  * L7165X-100
+  * L7165X-250
+  * L7565
+  * L7565-25
+  * L7965
+  * L7965-100
+  * L7993
+  * L7993-25
+  * LR7165
+  * LR7165-100
